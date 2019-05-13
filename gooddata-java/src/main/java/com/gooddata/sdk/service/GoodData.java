@@ -36,6 +36,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.VersionInfo;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StreamUtils;
@@ -77,10 +78,10 @@ public class GoodData {
     private final MetadataService metadataService;
     private final ModelService modelService;
     private final GdcService gdcService;
-    private final DataStoreService dataStoreService;
-    private final DatasetService datasetService;
+    private DataStoreService dataStoreService;
+    private DatasetService datasetService;
     private final ConnectorService connectorService;
-    private final ProcessService processService;
+    private ProcessService processService;
     private final WarehouseService warehouseService;
     private final NotificationService notificationService;
     private final ExportImportService exportImportService;
@@ -91,6 +92,9 @@ public class GoodData {
     private final AuditEventService auditEventService;
     private final ExecuteAfmService executeAfmService;
     private final LcmService lcmService;
+
+    private final GoodDataEndpoint endpoint;
+    private final GoodDataSettings settings;
 
     /**
      * Create instance configured to communicate with GoodData Platform under user with given credentials.
@@ -203,7 +207,6 @@ public class GoodData {
      * @param authentication authentication
      * @param settings additional settings
      */
-    @SuppressWarnings("deprecation")
     protected GoodData(GoodDataEndpoint endpoint, Authentication authentication, GoodDataSettings settings) {
         httpClient = authentication.createHttpClient(endpoint, createHttpClientBuilder(settings));
 
@@ -214,10 +217,7 @@ public class GoodData {
         metadataService = new MetadataService(getRestTemplate(), settings);
         modelService = new ModelService(getRestTemplate(), settings);
         gdcService = new GdcService(getRestTemplate(), settings);
-        dataStoreService = new DataStoreService(getHttpClient(), getRestTemplate(), gdcService, endpoint.toUri());
-        datasetService = new DatasetService(getRestTemplate(), dataStoreService, settings);
         exportService = new ExportService(getRestTemplate(), endpoint, settings);
-        processService = new ProcessService(getRestTemplate(), accountService, dataStoreService, settings);
         warehouseService = new WarehouseService(getRestTemplate(), settings);
         connectorService = new ConnectorService(getRestTemplate(), projectService, settings);
         notificationService = new NotificationService(getRestTemplate(), settings);
@@ -228,6 +228,9 @@ public class GoodData {
         auditEventService = new AuditEventService(getRestTemplate(), accountService, settings);
         executeAfmService = new ExecuteAfmService(getRestTemplate(), settings);
         lcmService = new LcmService(getRestTemplate(), settings);
+
+        this.endpoint = endpoint;
+        this.settings = settings;
     }
 
     static RestTemplate createRestTemplate(GoodDataEndpoint endpoint, HttpClient httpClient) {
@@ -376,7 +379,11 @@ public class GoodData {
      * @return initialized service for data store management
      */
     @Bean("goodDataDataStoreService")
+    @Lazy
     public DataStoreService getDataStoreService() {
+        if (dataStoreService == null) {
+            dataStoreService = new DataStoreService(getHttpClient(), getRestTemplate(), getGdcService(), endpoint.toUri());
+        }
         return dataStoreService;
     }
 
@@ -386,7 +393,11 @@ public class GoodData {
      * @return initialized service for dataset management
      */
     @Bean("goodDataDatasetService")
+    @Lazy
     public DatasetService getDatasetService() {
+        if (datasetService == null) {
+            datasetService = new DatasetService(getRestTemplate(), getDataStoreService(), settings);
+        }
         return datasetService;
     }
 
@@ -406,7 +417,11 @@ public class GoodData {
      * @return initialized service for dataload processes management and process executions
      */
     @Bean("goodDataProcessService")
+    @Lazy
     public ProcessService getProcessService() {
+        if (processService == null) {
+            processService = new ProcessService(getRestTemplate(), getAccountService(), getDataStoreService(), settings);
+        }
         return processService;
     }
 
