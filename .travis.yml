@@ -5,6 +5,7 @@ install: true
 script: mvn verify javadoc:javadoc coveralls:report -Pcoverage -B -V
 jdk:
   - oraclejdk8
+  - oraclejdk11
 branches:
   only:
      - master
