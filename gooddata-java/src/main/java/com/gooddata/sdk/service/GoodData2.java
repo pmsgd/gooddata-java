@@ -29,6 +29,10 @@ import org.apache.http.client.HttpClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
+
+import static org.apache.http.util.VersionInfo.loadVersionInfo;
+
 /**
  * Entry point for GoodData SDK usage.
  * <p>
@@ -42,7 +46,7 @@ import org.springframework.web.client.RestTemplate;
  *     gd.logout();
  * </code></pre>
  */
-public class GoodData {
+public class GoodData2 {
 
     private final RestTemplate restTemplate;
     private final AccountService accountService;
@@ -64,16 +68,9 @@ public class GoodData {
     private final AuditEventService auditEventService;
     private final ExecuteAfmService executeAfmService;
     private final LcmService lcmService;
-    /**
-     * Create instance configured to communicate with GoodData Platform running on given endpoint and using
-     * given http client factory.
-     *
-     * @param provider authentication
-     * @param endpoint GoodData Platform's endpoint
-     * @param settings additional settings
-     */
-    protected GoodData(RestOperationsProvider provider, GoodDataEndpoint endpoint, GoodDataSettings settings) {
-        this.restTemplate = (RestTemplate) provider.createRestOperations(endpoint, settings);
+
+    GoodData2(RestOperationsProvider provider, GoodDataEndpoint endpoint, GoodDataSettings settings) {
+        this.restTemplate = (RestTemplate) provider.createRestOperations(endpoint,settings, Collections.emptyMap()); //FIXME
         accountService = new AccountService(getRestTemplate(), settings);
         projectService = new ProjectService(getRestTemplate(), accountService, settings);
         metadataService = new MetadataService(getRestTemplate(), settings);
@@ -102,7 +99,6 @@ public class GoodData {
             // TODO log some warning
         }
     }
-
     /**
      * Get the configured {@link RestTemplate} used by the library.
      * This is the extension point for inheriting classes providing additional services.

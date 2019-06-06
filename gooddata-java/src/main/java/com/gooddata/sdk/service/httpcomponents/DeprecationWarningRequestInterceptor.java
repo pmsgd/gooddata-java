@@ -3,7 +3,7 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE.txt file in the root directory of this source tree.
  */
-package com.gooddata.sdk.service;
+package com.gooddata.sdk.service.httpcomponents;
 
 import com.gooddata.gdc.Header;
 import org.slf4j.Logger;
